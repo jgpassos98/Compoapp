@@ -319,6 +319,15 @@ def generate_alloy_compositions(num_elements, elements, lower_limits, upper_limi
     df = pd.DataFrame(compositions, columns=elements)
     return df
     
+def df_to_excel(df):
+    # Convert DataFrame to Excel file content in memory
+    excel_buffer = pd.ExcelWriter(path=None, engine="openpyxl")
+    df.to_excel(excel_buffer, index=False, header=True)
+    excel_buffer.seek(0)
+    excel_content = excel_buffer.read()
+    excel_buffer.close()
+    return excel_content
+        
 def main():
 
     st.title("Alloy Composition App")
@@ -356,8 +365,8 @@ def generate_compositions_tab():
         
         if st.button("Save to Excel"):
             df = generate_alloy_compositions(num_elements, elements, lower_limits, upper_limits, step)
-            df_to_save = df.to_excel(index=False, header=True)
-            st.download_button(label="Download Excel", data=df_to_save, file_name="alloy_compositions.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", key=None)
+            excel_file = df_to_excel(df)
+            st.download_button(label="Download Excel", data=excel_file, file_name="alloy_compositions.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", key=None)
             st.success("Click the button above to download the Excel file.")
             
 
