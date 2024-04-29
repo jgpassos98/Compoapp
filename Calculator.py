@@ -332,7 +332,7 @@ def df_to_excel(df):
     excel_content = excel_buffer.getvalue()
     excel_buffer.close()
     return excel_content
-        
+    
 def main():
 
     st.title("Alloy Composition App")
@@ -373,7 +373,8 @@ def generate_compositions_tab():
             excel_file = df_to_excel(df)
             st.download_button(label="Download Excel", data=excel_file, file_name="alloy_compositions.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", key=None)
             st.success("Click the button above to download the Excel file.")
-            
+
+           
 
 def view_uploaded_compositions_tab():
     st.title("Apply filters (follow the steps every time a value is changed)")
@@ -415,8 +416,8 @@ def view_uploaded_compositions_tab():
         
         # Input fields for DHmix threshold
         min_DHmix, max_DHmix = st.columns(2)
-        min_DHmix_value = min_DHmix.number_input("Minimum DHmix (kJ/mol):", key="min_DHmix", step=0.1)
-        max_DHmix_value = max_DHmix.number_input("Maximum DHmix (kJ/mol):", key="max_DHmix", step=0.1)
+        min_DHmix_value = min_DHmix.number_input("Minimum DHmix (kJ.mol):", key="min_DHmix", step=0.1)
+        max_DHmix_value = max_DHmix.number_input("Maximum DHmix (kJ.mol):", key="max_DHmix", step=0.1)
 
     filter_button_col, _ = st.columns([3, 1])
     df = st.session_state.df
@@ -498,9 +499,6 @@ def view_uploaded_compositions_tab():
 
             st.session_state.df_filtered_DHel2 = df_filtered_DHel2
 
-            st.write("Filtered DataFrame with Tm Filter:")
-            st.write(df_filtered_DHel2)
-
             # Save the filtered dataframe back to the original Excel file
             df_filtered_DHel2.to_excel(uploaded_file.name, index=False, engine='openpyxl')
             st.success("Filtered data saved to the uploaded file.")
@@ -520,30 +518,55 @@ def view_uploaded_compositions_tab():
             
             st.session_state.df_filtered_DHel2 = df_filtered_DHel2  
 
-            # Print the DataFrame with average Tm to check its content
-            st.write("DataFrame with average Tm:4")
-            st.write(df_filtered_DHel2)
-
             # Filter based on DHmix values
             df_filtered_DHmix = st.session_state.df_filtered_DHel2[(st.session_state.df_filtered_DHel2['Enthalpy of mixing (DHmix)'] >= min_DHmix_value) & 
                                                               (st.session_state.df_filtered_DHel2['Enthalpy of mixing (DHmix)'] <= max_DHmix_value)]
-
-            # Print the filtered DataFrame to check its content
-            st.write("Filtered DataFrame with Tm Filter:")
-            st.write(df_filtered_DHmix)
-
+                                                              
             # Drop the 'DHmix' column
             df_filtered_DHmix2 = df_filtered_DHmix.drop(columns=["Enthalpy of mixing (DHmix)"], errors="ignore")
 
-            # Print the DataFrame without 'DHmix' column to check its content
-            st.write("Filtered DataFrame with DHmix Filter and column removed:")
-            st.write(df_filtered_DHmix2)
-                        
             st.session_state.df_filtered_DHmix2 = df_filtered_DHmix2
 
             # Save the filtered dataframe back to the original Excel file
             df_filtered_DHmix2.to_excel(uploaded_file.name, index=False, engine='openpyxl')
             st.success("Filtered data saved to the uploaded file.")
+            
+    if st.button("Step 5: Save and Download filtered data"):
+        if st.session_state.df_filtered_DHmix2 is not None:
+
+            df_filtered_DHmix2 = st.session_state.df_filtered_DHmix2
+            
+            df_filtered_DHmix2_copy = df_filtered_DHmix2.copy()
+            df_filtered_DHmix2_copy2 = df_filtered_DHmix2.copy()
+            df_filtered_DHmix2_copy3 = df_filtered_DHmix2.copy()
+            df_filtered_DHmix2_copy4 = df_filtered_DHmix2.copy()
+            df_filtered_DHmix2_copy5 = df_filtered_DHmix2.copy()
+            
+            entropies = calculate_configurational_entropy(df_filtered_DHmix2_copy)
+            configuration_entropy = entropies.pop('Configurational Entropy (J/mol·K)')
+            df_filtered_DHmix2['Configurational Entropy (J/mol·K)'] = configuration_entropy
+            
+            average_vecs = calculate_average_vec(df_filtered_DHmix2_copy2, df_VEC)
+            vecs = average_vecs.pop('Average VEC')
+            df_filtered_DHmix2['Average VEC'] = vecs
+           
+            average_Tms = calculate_weighted_average_Tm(df_filtered_DHmix2_copy3, df_Tm)
+            Melting_temps = average_Tms.pop('Average Tm')
+            df_filtered_DHmix2['Average Tm'] = Melting_temps
+
+            DHel_values = calculate_elastic_strain_energy(df_filtered_DHmix2_copy4, bulk_modulus_values, atomic_radius_values)
+            DHel_values = DHel_values.pop('Elastic Strain Energy (DHel)')
+            df_filtered_DHmix2['Elastic Strain Energy (DHel)'] = DHel_values
+            
+            relative_composition_matrices = calculate_relative_composition(df_filtered_DHmix2_copy5)
+            atomic_fraction_product_matrices = calculate_atomic_fraction_product(df_filtered_DHmix2_copy5)
+            total_enthalpies = calculate_mixing_enthalpy(df_filtered_DHmix2_copy5, df_w0el, df_w1el, df_w2el, df_w3el, relative_composition_matrices, atomic_fraction_product_matrices) 
+            mixing_enthalpy = total_enthalpies.pop('Enthalpy of mixing (DHmix)') 
+            df_filtered_DHmix2['Enthalpy of mixing (DHmix)'] = mixing_enthalpy   
+
+        excel_file = df_to_excel(df_filtered_DHmix2)
+        st.download_button(label="Download Excel", data=excel_file, file_name="filtered_compositions.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", key=None)
+        st.success("Click the button above to download the Excel file.")
                 
 if __name__ == "__main__":
     main()
