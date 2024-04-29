@@ -2,6 +2,7 @@ import streamlit as st
 import itertools
 import pandas as pd
 import numpy as np
+import io
 
 # Read the Excel file containing element-VEC data
 df_VEC = pd.read_excel("VEC.xlsx")
@@ -320,11 +321,15 @@ def generate_alloy_compositions(num_elements, elements, lower_limits, upper_limi
     return df
     
 def df_to_excel(df):
-    # Convert DataFrame to Excel file content in memory
-    excel_buffer = pd.ExcelWriter(path=None, engine="openpyxl")
-    df.to_excel(excel_buffer, index=False, header=True)
-    excel_buffer.seek(0)
-    excel_content = excel_buffer.read()
+    # Create a buffer to store the Excel file content
+    excel_buffer = io.BytesIO()
+    
+    # Write the DataFrame to the buffer as an Excel file
+    with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, header=True)
+    
+    # Get the content of the buffer and return it
+    excel_content = excel_buffer.getvalue()
     excel_buffer.close()
     return excel_content
         
