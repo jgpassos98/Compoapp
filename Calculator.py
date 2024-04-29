@@ -356,8 +356,9 @@ def generate_compositions_tab():
         
         if st.button("Save to Excel"):
             df = generate_alloy_compositions(num_elements, elements, lower_limits, upper_limits, step)
-            df.to_excel("alloy_compositions.xlsx", index=False)
-            st.success("Saved to alloy_compositions.xlsx")
+            df_to_save = df.to_excel(index=False, header=True)
+            st.download_button(label="Download Excel", data=df_to_save, file_name="alloy_compositions.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", key=None)
+            st.success("Click the button above to download the Excel file.")
             
 
 def view_uploaded_compositions_tab():
