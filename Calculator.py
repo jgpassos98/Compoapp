@@ -165,11 +165,9 @@ def calculate_elastic_strain_energy(df_filtered_Tm2, bulk_modulus_values, atomic
     # Initialize vi_values vector
     vi_values = []
 
-    # Step 3: Calculate ci.Bi.Vi for each element
-    ci_Bi_Vi_values = []
+    # Step 2: Calculate vi values for each element
     for index, row in df_filtered_Tm2.iterrows():
         alloy_composition = row / 100  # Convert compositions to fractions
-        ci_Bi_Vi = []
         vi = []  # Initialize vi for the alloy composition
         for element, composition in alloy_composition.items():
             if composition > 0:  # Exclude elements with zero composition
@@ -181,38 +179,31 @@ def calculate_elastic_strain_energy(df_filtered_Tm2, bulk_modulus_values, atomic
 
                 # Calculate the corresponding Vi value using the retrieved radius
                 vi_element = (4 / 3) * np.pi * (ri ** 3) * (10 ** -27) * 6.02e23
-                
+
                 # Append the Vi value for the alloy composition
                 vi.append(vi_element)
-                
+
         vi_values.append(vi)
 
-        # Calculate ci.Bi.Vi for the alloy composition
-        for ci_Bi_element, vi_element in zip(ci_Bi_values[index], vi_values[index]):  # Using index to access ci_Bi for the current alloy composition
-            ci_Bi_Vi_element = ci_Bi_element * vi_element  # Calculate ci.Bi.Vi for the element
-            ci_Bi_Vi.append(ci_Bi_Vi_element)
-
-        # Append ci_Bi_Vi for the current alloy composition
+    # Step 3: Calculate ci.Bi.Vi for each element
+    ci_Bi_Vi_values = []
+    for ci_Bi, vi in zip(ci_Bi_values, vi_values):
+        ci_Bi_Vi = [ci_Bi_element * vi_element for ci_Bi_element, vi_element in zip(ci_Bi, vi)]
         ci_Bi_Vi_values.append(ci_Bi_Vi)
 
+    # Step 4: Calculate V values
     V_values = []
     for ci_Bi, ci_Bi_Vi in zip(ci_Bi_values, ci_Bi_Vi_values):
         sum_ci_Bi = np.sum(ci_Bi)
         sum_ci_Bi_Vi = np.sum(ci_Bi_Vi)
 
         # Avoid division by zero
-        if sum_ci_Bi != 0:
-            V_value = sum_ci_Bi_Vi / sum_ci_Bi
-        else:
-            V_value = 0
-
+        V_value = sum_ci_Bi_Vi / sum_ci_Bi if sum_ci_Bi != 0 else 0
         V_values.append(V_value)
 
-    # Now, you can use vi_values in the calculation of DHel_element
-    
+    # Step 5: Calculate DHel values
     DHel_values = []
     for ci_Bi, V, vi in zip(ci_Bi_values, V_values, vi_values):
-        # Initialize total_DHel as a scalar
         total_DHel = 0
         for ci_Bi_element, vi_element in zip(ci_Bi, vi):
             DHel_element = ci_Bi_element * (((vi_element - V) ** 2) / (2 * vi_element))
@@ -220,12 +211,11 @@ def calculate_elastic_strain_energy(df_filtered_Tm2, bulk_modulus_values, atomic
 
         # Append the total_DHel divided by 1000 after the inner loop
         DHel_values.append(total_DHel / 1000)
-        
 
-    # After the outer loop, outside both loops, assign DHel_values to the DataFrame column
+    # Assign DHel_values to the DataFrame column
     df_filtered_Tm2['Elastic Strain Energy (DHel)'] = DHel_values
 
-    # Finally, return the DataFrame
+    # Return the DataFrame
     return df_filtered_Tm2
 
     
