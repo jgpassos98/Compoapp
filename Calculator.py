@@ -325,7 +325,7 @@ def df_to_excel(df):
     
 def main():
 
-    st.title("Alloy Composition App")
+    st.title("Alloy Composition App (entrar em contato comigo antes de usar ou mudar o VEC do Cr no GitHub (no momento está como 6)")
 
     # Create tabs for different functionalities
     tabs = ["Generate Compositions", "Filter Uploaded Compositions"]
