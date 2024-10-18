@@ -473,7 +473,7 @@ def view_uploaded_compositions_tab():
             st.success("Filtered data saved to the uploaded file.")
             
     # Display button for DHel filter
-    if st.button("Step 3: Apply DHel Filter"):
+    if st.button("Step 4: Apply DHel Filter"):
         if st.session_state.df_filtered_Tm2 is not None:
 
             # Calculate average DHel for the filtered compositions
@@ -494,7 +494,7 @@ def view_uploaded_compositions_tab():
             st.success("Filtered data saved to the uploaded file.")
             
         # Display button for DHmix filter
-    if st.button("Step 4: Apply DHmix Filter"):
+    if st.button("Step 5: Apply DHmix Filter"):
         if st.session_state.df_filtered_DHel2 is not None:
 
             # Calculate the relative composition matrices
@@ -521,7 +521,7 @@ def view_uploaded_compositions_tab():
             df_filtered_DHmix2.to_excel(uploaded_file.name, index=False, engine='openpyxl')
             st.success("Filtered data saved to the uploaded file.")
             
-    if st.button("Step 5: Save and Download filtered data"):
+    if st.button("Step 6: Save and Download filtered data"):
         if st.session_state.df_filtered_DHmix2 is not None:
 
             df_filtered_DHmix2 = st.session_state.df_filtered_DHmix2
